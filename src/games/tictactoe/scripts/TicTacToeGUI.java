@@ -1,4 +1,4 @@
-package games.tictactoe;
+package games.tictactoe.scripts;
 
 import javax.swing.*;
 import java.awt.*;
@@ -246,4 +246,3 @@ public class TicTacToeGUI {
         return false;
     }
 }
-
