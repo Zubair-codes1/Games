@@ -2,78 +2,142 @@ package games.Sudoku;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.Line2D;
 import java.util.ArrayList;
+import javax.sound.sampled.Line;
 import javax.swing.*;
 
-public class Sudoku {
+public class Sudoku extends JPanel {
 
-    private int boardWidth = 600;
-    private int boardHeight = 650;
+    private int panelWidth;
+    private int panelHeight;
 
-    private JFrame frame;
+    private JLabel titleLabel;
+    private JPanel titlePanel;
+    private JPanel numbersPanel;
+    private JPanel inputPanel;
 
-    private int[][] puzzle = {
-            {0, 0, 7, 4, 9, 1, 6, 0 ,5},
-            {2, 0, 0, 0, 6, 0, 3, 0, 9},
-            {0, 0, 0, 0, 0, 7, 0, 1, 0},
-            {0, 5, 8, 6, 0, 0, 0, 0, 4},
-            {0, 0, 3, 0, 0, 0, 0, 9, 0},
-            {0, 0, 6, 2, 0, 0, 1, 8, 7},
-            {9, 0, 4, 0, 7, 0, 0, 0, 2},
-            {6, 7, 0, 8, 3, 0, 0, 0, 0},
-            {8, 1, 0, 0, 4, 5, 0, 0, 0}
-    };
+    private Board board;
+    private int[][] puzzle;
+    private final int[][] solution;
 
-    private int[][] solution = {
-        {3, 8, 7, 4, 9, 1, 6, 2 ,5},
-        {2, 4, 1, 5, 6, 8, 3, 7, 9},
-        {5, 6, 9, 3, 2, 7, 4, 1, 8},
-        {7, 5, 8, 6, 1, 9, 2, 3, 4},
-        {1, 2, 3, 7, 8, 4, 5, 9, 6},
-        {4, 9, 6, 2, 5, 3, 1, 8, 7},
-        {9, 3, 4, 1, 7, 6, 8, 5, 2},
-        {6, 7, 5, 8, 3, 2, 9, 4, 1},
-        {8, 1, 2, 9, 4, 5, 7, 6, 3}
-    };
+    private int currentSelectedNumber = 0;
 
-    private JLabel textLabel;
-    private JPanel textPanel;
-    private JPanel boardPanel;
+    public  Sudoku(int panelWidth, int panelHeight) {
+        this.panelWidth = panelWidth;
+        this.panelHeight = panelHeight;
 
-    public Sudoku() {
-        frame = new JFrame("Sudoku");
-        frame.setVisible(true);
-        frame.setSize(boardWidth, boardHeight);
-        frame.setResizable(false);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setLocationRelativeTo(null);
-        frame.setLayout(null);
+        this.setPreferredSize(new Dimension(this.panelWidth, this.panelHeight));
+        this.setBackground(Color.white);
+        this.setLayout(new BorderLayout());
 
+        titleLabel = new JLabel("Sudoku");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 50));
+        titleLabel.setHorizontalAlignment(JLabel.CENTER);
 
-        textLabel = new JLabel();
-        textLabel.setFont(new Font("Arial", Font.BOLD, 30));
-        textLabel.setHorizontalAlignment(JLabel.CENTER);
-        textLabel.setText("Sudoku: 0");
+        titlePanel = new JPanel();
+        titlePanel.setBackground(Color.white);
+        titlePanel.add(titleLabel);
 
-        textPanel = new JPanel();
-        textPanel.add(textLabel);
+        numbersPanel = new JPanel();
+        numbersPanel.setBackground(Color.white);
+        numbersPanel.setLayout(new GridLayout(9, 9));
 
-        boardPanel = new JPanel();
-        boardPanel.setLayout(new GridLayout(9, 9));
-        setupTiles();
+        board = new Board();
+        board.generatePuzzle(80);
 
+        puzzle = board.getBoard();
+        solution = board.getSolution();
 
+        inputPanel = new JPanel();
+        inputPanel.setBackground(Color.white);
+
+        createBoard();
+        createInputNumbers();
+
+        this.add(titlePanel,BorderLayout.NORTH);
+        this.add(numbersPanel,BorderLayout.CENTER);
+        this.add(inputPanel,BorderLayout.SOUTH);
+
+        
+        this.setVisible(true);
     }
 
-    private void setupTiles() {
-        for (int row = 0; row < 9; row++) {
-            for (int col = 0; col < 9; col++) {
-                Tile tile = new Tile(row, col);
-                int tileInt = puzzle[row][col];
-                tile.setText(Integer.toString(tileInt));
-                tile.setFocusable(false);
-                boardPanel.add(tile);
+    private void createBoard() {
+        for (int i = 0; i < puzzle.length; i++) {
+            for (int j = 0; j < puzzle[i].length; j++) {
+
+                JButton button = getJButton(i, j);
+
+                int finalI = i;
+                int finalJ = j;
+                button.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+
+                        updateButtons(e, currentSelectedNumber, finalI, finalJ);
+                    }
+                });
+
+                numbersPanel.add(button);
             }
+        }
+    }
+
+    private void updateButtons(ActionEvent e,int currentSelectedNumber, int finalI, int finalJ) {
+        JButton sourceButton = (JButton) e.getSource();
+
+        if (currentSelectedNumber != 0 && sourceButton.getText().isEmpty()) {
+
+            if (solution[finalI][finalJ] != currentSelectedNumber) {
+                sourceButton.setBackground(Color.RED);
+                sourceButton.setOpaque(true);
+                Timer timer = new Timer(300, event -> {
+                    sourceButton.setBackground(Color.WHITE);
+                    sourceButton.setOpaque(false); // IMPORTANT
+                });
+                timer.setRepeats(false);
+                timer.start();
+
+
+
+            } else {
+                sourceButton.setForeground(Color.BLACK);
+                sourceButton.setText(String.valueOf(currentSelectedNumber));
+            }
+        }
+    }
+
+    private JButton getJButton(int i, int j) {
+        String valueOfNumber = puzzle[i][j] + "";
+        if (valueOfNumber.equals("0")) { valueOfNumber = ""; }
+
+        JButton button = new JButton(valueOfNumber);
+        button.setBackground(Color.white);
+        button.setFont(new Font("Arial", Font.BOLD, 50));
+        button.setForeground(Color.DARK_GRAY);
+
+        int top    = (i % 3 == 0) ? 2 : 1;
+        int left   = (j % 3 == 0) ? 2 : 1;
+        int bottom = (i == 8) ? 2 : 1;
+        int right  = (j == 8) ? 2 : 1;
+
+        button.setBorder(BorderFactory.createMatteBorder(top, left, bottom, right, Color.BLACK));
+        return button;
+    }
+
+    private void createInputNumbers() {
+        for (int i = 1; i < 10; i++) {
+            JButton button = new JButton(i + "");
+            button.setBackground(Color.white);
+            button.setFont(new Font("Arial", Font.BOLD, 50));
+            button.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    currentSelectedNumber = Integer.parseInt(button.getText());
+                }
+            });
+            inputPanel.add(button);
         }
     }
 }

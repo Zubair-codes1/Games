@@ -11,6 +11,8 @@ public class Board {
     private int[][] solution;                              // full solution
     private final Random random = new Random();
 
+    public Board() {}
+
     public int[][] generatePuzzle(int clues) {
         clearBoard();
         fillBoard();              // generate full solution
