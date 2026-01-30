@@ -1,7 +1,6 @@
-package games.pong.scripts;
+package games.pong;
 
 import javax.swing.*;
-import javax.swing.text.AbstractDocument;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 
